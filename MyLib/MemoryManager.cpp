@@ -24,10 +24,10 @@ DWORD_PTR MemoryManager::GetModuleBase(LPCTSTR szModName)
 {
 	return 0;
 }
-//参数：buffer，要查找的字符串,buffer长度，字符串长度。返回索引
+//参数：bstr要查找的字符串,dwStrLen查找字符长度,pMemoryBuffer宿主进程拷贝出的内存，dwBufferSize一次检索的长度。返回索引
 //MemFind(pCurrMemoryData dwNumberOfBytesRead bSearchData nSearchSize);
 int MemFind(BYTE *pMemoryBuffer, int dwBufferSize, BYTE *bstr, DWORD dwStrLen)
-{
+{	
 	if (dwBufferSize <0)
 	{
 		return -1;
@@ -108,7 +108,15 @@ int SundaySearch(BYTE* bStartAddr, int dwSize, BYTE* bSearchData, DWORD dwSearch
 		return -1;
 
 }
-
+/*
+	bSearchData		特征码
+	nSearchSize		特征码长度
+	dwStartAddr		开始查找地址
+	dwEndAddr		结束查找地址
+	bIsCurrProcess	是否是本进程内存
+	iSearchMode		搜索模式
+	vRet			结果列表
+*/
 BOOL MemoryManager::MemSearch(BYTE * bSearchData,int nSearchSize,DWORD_PTR dwStartAddr, DWORD_PTR dwEndAddr, BOOL bIsCurrProcess, int iSearchMode, std::vector<DWORD_PTR> &vRet)
 {
 
@@ -117,9 +125,17 @@ BOOL MemoryManager::MemSearch(BYTE * bSearchData,int nSearchSize,DWORD_PTR dwSta
 	std::vector<MEMORY_REGION> m_vMemoryRegion;
 	mbi.RegionSize = 0x1000;
 	DWORD dwAddress = dwStartAddr;
-	//搜索内存块,放到vector数组中
+	//查询内存地址信息
 	while (VirtualQueryEx(hProcess, (LPCVOID)dwAddress, &mbi, sizeof(mbi)) && (dwAddress < dwEndAddr) && ((dwAddress + mbi.RegionSize) > dwAddress))
 	{
+		/*
+			MEM_COMMIT		已提交
+			MEM_RESERVE		保留
+			MEM_FREE		空闲
+			PAGE_GUARD		保护页
+			PAGE_NOACCESS	禁止访问页
+			PAGE_NOCACHE	禁止缓存页
+		*/
 		if ((mbi.State == MEM_COMMIT) && ((mbi.Protect & PAGE_GUARD) == 0) && (mbi.Protect != PAGE_NOACCESS) && ((mbi.AllocationProtect & PAGE_NOCACHE) != PAGE_NOCACHE))
 		{
 			MEMORY_REGION mData = {0};
