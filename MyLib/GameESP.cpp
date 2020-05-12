@@ -65,23 +65,17 @@ namespace GameData {
 	DWORD GOODS_POS_OFFSET = 336;//物品坐标偏移
 }
 
-
+//功能开关
 namespace global
 {
 	int bEsp = false;
 	int bPlayer = false;
 	int bVehicle = false;
 	int bGoods = false;
-
 	int bAim = false;
 	int bAimOpen = false;
 	int nAimPos = 0;
-
 	int bAbout = 0;
-
-
-	
-
 	int nOther = 0;
 	int bSpeed = false;
 	int bWeapon = false;

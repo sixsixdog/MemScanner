@@ -20,6 +20,7 @@ DWORD_PTR ProcManager::GetModuleBase(DWORD dwPid,LPCTSTR szModName)
 	HANDLE        hSnap;
 	MODULEENTRY32 me;
 	me.dwSize = sizeof(me);
+	//获取模块快照
 	hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPid);
 
 	if (hSnap == INVALID_HANDLE_VALUE)
@@ -34,6 +35,7 @@ DWORD_PTR ProcManager::GetModuleBase(DWORD dwPid,LPCTSTR szModName)
 		if (_tcsicmp(me.szModule,szModName)==0)
 		{
 			CloseHandle(hSnap);
+			//返回模块地址
 			return DWORD_PTR(me.modBaseAddr);
 		}
 		bRet = Module32Next(hSnap, &me);

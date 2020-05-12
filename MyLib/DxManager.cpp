@@ -6,11 +6,14 @@
 
 DxManager::DxManager()
 {
+	//窗口句柄
 	game_hWnd = NULL;
+	//索引缓存
 	g_pIndexBuffer = NULL;
+	//向量缓存
 	g_pVertexBuffer = NULL;
 }
-
+//释放资源
 DxManager::~DxManager()
 {
 	SAFE_RELEASE(pD3D);
@@ -23,16 +26,16 @@ DxManager::~DxManager()
 		
 }
 
-//render function
+//渲染函数
 void DxManager::render()
 {
-	// clear the window alpha
+	// 清屏 使用深度缓存 0,0,0颜色刷新
 	pDevice->Clear(0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0);//D3DCLEAR_ZBUFFER 不加的话变换演示效果没有
-	pDevice->BeginScene();    // begins the 3D scene
-							 //calculate and and draw esp stuff
-	ESPWork();
-	pDevice->EndScene();    // ends the 3D scene
-	pDevice->Present(NULL, NULL, NULL, NULL);   // displays the created frame on the screen
+	pDevice->BeginScene();    //开始渲染
+							 
+	ESPWork();//计算数据
+	pDevice->EndScene();    // 结束渲染
+	pDevice->Present(NULL, NULL, NULL, NULL);   //显示
 }
 
 
@@ -55,10 +58,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		return 0;
 	}
-
+	//交由系统处理其他消息
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
-
+//设置窗口
 void DxManager::SetupWindow(LPCTSTR szWndName)
 {
 

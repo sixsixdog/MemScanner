@@ -14,12 +14,12 @@ MemoryManager::~MemoryManager()
 }
 
 
-
+//写入内存
 BOOL MemoryManager::WPM(DWORD_PTR address, LPVOID buff, DWORD bufSize)
 {
 	return WriteProcessMemory(hProcess, (LPVOID)address, buff, bufSize, NULL);
 }
-
+//获取模块基址
 DWORD_PTR MemoryManager::GetModuleBase(LPCTSTR szModName)
 {
 	return 0;

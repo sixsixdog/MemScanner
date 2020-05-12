@@ -7,15 +7,4 @@
 
 #define UpdateTime 0
 
-
-
-
-
-
-
-
-
-
-
-
 #endif

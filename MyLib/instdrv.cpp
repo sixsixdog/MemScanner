@@ -11,19 +11,19 @@ BOOL scmInstallDriver(
     SC_HANDLE  schService=NULL;
 	for (int i = 0; i < 3 && (NULL == schService); i++)
 	{
-		schService = CreateService(SchSCManager, // SCManager database
-			DriverName,           // name of service
-			DriverName,           // name to display
-			SC_MANAGER_ALL_ACCESS,    // desired access
-			SERVICE_KERNEL_DRIVER, // service type
-			SERVICE_DEMAND_START,  // start type
-			SERVICE_ERROR_IGNORE,  // error control type
-			ServiceExe,            // service's binary
-			NULL,                  // no load ordering group
-			NULL,                  // no tag identifier
-			NULL,                  // no dependencies
-			NULL,                  // LocalSystem account
-			NULL                   // no password
+		schService = CreateService(SchSCManager, // 服务控制管理程序维护的登记数据库的句柄
+			DriverName,            // 服务名称
+			DriverName,            // 显示名称
+			SC_MANAGER_ALL_ACCESS, // 返回类型
+			SERVICE_KERNEL_DRIVER, // 服务类型
+			SERVICE_DEMAND_START,  // 何时开始
+			SERVICE_ERROR_IGNORE,  // 启动失败的严重程度
+			ServiceExe,            // 指定服务程序二进制文件的路径
+			NULL,                  // 顺序装入的服务组名
+			NULL,                  // 忽略(标志符)
+			NULL,                  // 依赖的服务
+			NULL,                  // 服务帐号。如是NULL,则表示使用LocalSystem
+			NULL                   // 密码。NULL表示无密码
 			);
 		if (schService == NULL) {
 			printf("s1%s\n", DriverName);
@@ -41,14 +41,7 @@ BOOL scmInstallDriver(
     return TRUE;
 }
 
-/*
-* scmStartDriver
-*
-* Purpose:
-*
-* Start service, resulting in SCM drvier load.
-*
-*/
+//启动驱动
 BOOL scmStartDriver(
     _In_ SC_HANDLE SchSCManager,
     _In_ LPCTSTR DriverName
@@ -56,7 +49,7 @@ BOOL scmStartDriver(
 {
     SC_HANDLE  schService;
     BOOL       ret;
-
+    //打开服务
     schService = OpenService(SchSCManager,
         DriverName,
 		SC_MANAGER_ALL_ACCESS
@@ -66,7 +59,7 @@ BOOL scmStartDriver(
 		return FALSE;
 	}
         
-
+    //开启服务
     ret = StartService(schService, 0, NULL)
         || GetLastError() == ERROR_SERVICE_ALREADY_RUNNING;
 
@@ -75,14 +68,7 @@ BOOL scmStartDriver(
     return ret;
 }
 
-/*
-* scmOpenDevice
-*
-* Purpose:
-*
-* Open driver device by symbolic link.
-*
-*/
+//打开驱动
 BOOL scmOpenDevice(
     _In_ LPCTSTR DriverName,
     _Inout_opt_ PHANDLE lphDevice
@@ -91,9 +77,10 @@ BOOL scmOpenDevice(
     TCHAR    completeDeviceName[64];
     HANDLE   hDevice;
 
+    //初始化内存同ZeroMemory 比ZeroMemory安全
     RtlSecureZeroMemory(completeDeviceName, sizeof(completeDeviceName));
     wsprintf(completeDeviceName, TEXT("\\\\.\\%s"), DriverName);
-
+    //创建文件
     hDevice = CreateFile(completeDeviceName,
 		GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0
     );
@@ -113,14 +100,7 @@ BOOL scmOpenDevice(
     return TRUE;
 }
 
-/*
-* scmStopDriver
-*
-* Purpose:
-*
-* Command SCM to stop service, resulting in driver unload.
-*
-*/
+//停止驱动
 BOOL scmStopDriver(
     _In_ SC_HANDLE SchSCManager,
     _In_ LPCTSTR DriverName
@@ -132,6 +112,7 @@ BOOL scmStopDriver(
     SERVICE_STATUS  serviceStatus;
 
     ret = FALSE;
+    //打开服务
 	schService = OpenService(SchSCManager, DriverName, SC_MANAGER_ALL_ACCESS);
     if (schService == NULL) {
         return ret;
@@ -140,6 +121,7 @@ BOOL scmStopDriver(
     iRetryCount = 5;
     do {
         SetLastError(0);
+        //服务管理器
         ret = ControlService(schService, SERVICE_CONTROL_STOP, &serviceStatus);
         if (ret != FALSE)
             break;
@@ -153,15 +135,7 @@ BOOL scmStopDriver(
 
     return ret;
 }
-
-/*
-* scmRemoveDriver
-*
-* Purpose:
-*
-* Remove service entry from SCM database.
-*
-*/
+//删除驱动
 BOOL scmRemoveDriver(
     _In_ SC_HANDLE SchSCManager,
     _In_ LPCTSTR DriverName
@@ -169,23 +143,17 @@ BOOL scmRemoveDriver(
 {
     SC_HANDLE  schService;
     BOOL       bResult = FALSE;
-
+    //打开服务
 	schService = OpenService(SchSCManager, DriverName, SC_MANAGER_ALL_ACCESS);
     if (schService) {
+        //删除服务
         bResult = DeleteService(schService);
         CloseServiceHandle(schService);
     }
     return bResult;
 }
 
-/*
-* scmUnloadDeviceDriver
-*
-* Purpose:
-*
-* Combines scmStopDriver and scmRemoveDriver.
-*
-*/
+//卸载设备驱动
 BOOL scmUnloadDeviceDriver(
     _In_ LPCTSTR Name
 )
@@ -196,6 +164,7 @@ BOOL scmUnloadDeviceDriver(
     if (Name == NULL) {
         return bResult;
     }
+    //打开服务管理器
     schSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (schSCManager) {
         scmStopDriver(schSCManager, Name);
@@ -205,14 +174,7 @@ BOOL scmUnloadDeviceDriver(
     return bResult;
 }
 
-/*
-* scmLoadDeviceDriver
-*
-* Purpose:
-*
-* Unload if already exists, Create, Load and Open driver instance.
-*
-*/
+//载入设备驱动
 BOOL scmLoadDeviceDriver(
     _In_		LPCTSTR Name,
     _In_opt_	LPCTSTR Path,
@@ -225,7 +187,7 @@ BOOL scmLoadDeviceDriver(
     if (Name == NULL) {
         return bResult;
     }
-
+    //打开服务管理器
     schSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (schSCManager) {
         //scmRemoveDriver(schSCManager, Name);

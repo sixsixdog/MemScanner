@@ -15,6 +15,7 @@ DWORD WINAPI ThreadUpdateData(LPVOID p);
 DWORD WINAPI ThreadUpdateData2(LPVOID p);
 DWORD WINAPI ThreadUpdateData3(LPVOID p);
 
+//Ðý×ª½Ç
 struct FRotator
 {
 	float Pitch;

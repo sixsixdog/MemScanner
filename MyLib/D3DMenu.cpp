@@ -1,5 +1,5 @@
 #include "D3DMenu.h"
-
+//增加条目
 void D3DMenu::AddItem(char *txt, int *var, char **opt, int maxval, int typ)
 {
 	if (noitems >= (maxitems - 3)) return;
@@ -11,23 +11,22 @@ void D3DMenu::AddItem(char *txt, int *var, char **opt, int maxval, int typ)
 	noitems++;
 	totheight = (noitems*height) + titleheight;
 }
-
+//增加组
 void D3DMenu::AddGroup(char *txt, int *var, char **opt, int maxval)
 {
 	AddItem(txt, var, opt, maxval, MENUGROUP);
 }
-
+//增加组1
 void D3DMenu::AddGroup1(char *txt, int *var, char **opt, int maxval)
 {
 	AddItem(txt, var, opt, maxval, MENUGROUP1);
 }
-
-
+//添加文字
 void D3DMenu::AddText(char *txt, char *opt)
 {
 	AddItem(txt, 0, (char **)opt, 0, MENUTEXT);
 }
-
+//显示
 void D3DMenu::Show()
 {
 	int i, val, cy;
@@ -70,9 +69,10 @@ void D3DMenu::Show()
 		cy += height;
 	}
 }
-
+//调试窗口位置
 void D3DMenu::Nav(void)
 {
+	//菜单可见时启用
 	if (GetAsyncKeyState(VK_HOME) & 1) visible = (!visible);
 
 	if (!visible) return;

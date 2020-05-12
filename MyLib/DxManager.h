@@ -8,6 +8,7 @@
 #pragma comment(lib,"d3dx9.lib")
 #pragma comment(lib, "winmm.lib")
 
+//定义圆周率
 #define M_PI	3.14159265358979323846264338327950288419716939937510
 
 #define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=NULL; } }      //自定义一个SAFE_RELEASE()宏,便于资源的释放

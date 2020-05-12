@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <string>
-
+//Ëæ»ú×Ö·û´®
 class WRand
 {
 public:
