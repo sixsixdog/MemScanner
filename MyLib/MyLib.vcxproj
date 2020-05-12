@@ -178,7 +178,6 @@
     <ClInclude Include="instdrv.h" />
     <ClInclude Include="MemoryManager.h" />
     <ClInclude Include="Misc.h" />
-    <ClInclude Include="pch.h" />
     <ClInclude Include="ProcManager.h" />
     <ClInclude Include="WRand.h" />
   </ItemGroup>
@@ -190,12 +189,6 @@
     <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="Misc.cpp" />
     <ClCompile Include="MyLib.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="ProcManager.cpp" />
     <ClCompile Include="WRand.cpp" />
   </ItemGroup>
