@@ -167,41 +167,48 @@ inline BOOL WorldToScreen2(D3DXVECTOR3 _Enemy, D3DXVECTOR3 &_Screen,int &nLen)
 	_Screen.z=y1 - _Screen.y;
 	return TRUE;
 }
-
+//世界坐标转视窗坐标
 inline BOOL WorldToScreenGoods(D3DXVECTOR3 _Enemy, D3DXVECTOR3 &_Screen, int &nLen)
 {
+	//观察点
 	_Screen = D3DXVECTOR3(0, 0, 0);
 	float ScreenW = 0;
+	//获取矩阵
 	D3DMATRIX GameViewMatrix = pMM->RPM<D3DMATRIX>(dwJuzhenAddr, sizeof(D3DMATRIX));
+	
 	ScreenW = (GameViewMatrix._14 * _Enemy.x) + (GameViewMatrix._24* _Enemy.y) + (GameViewMatrix._34 * _Enemy.z + GameViewMatrix._44);
+	//换算屏幕比例
 	nLen = (int)ScreenW / 100;
+	//过滤极小错误值
 	if (ScreenW < 0.0001f)
 	{
 		return FALSE;
 	}
 
-
 	float ScreenY = (GameViewMatrix._12 * _Enemy.x) + (GameViewMatrix._22 * _Enemy.y) + (GameViewMatrix._32 * (_Enemy.z + 5) + GameViewMatrix._42);
 	float ScreenX = (GameViewMatrix._11 * _Enemy.x) + (GameViewMatrix._21 * _Enemy.y) + (GameViewMatrix._31 * _Enemy.z + GameViewMatrix._41);
-
+	//横纵坐标
 	_Screen.y = (pDxm->s_height / 2) - (pDxm->s_height / 2) * ScreenY / ScreenW;
 	_Screen.x = (pDxm->s_width / 2) + (pDxm->s_width / 2) * ScreenX / ScreenW;
 	float y1 = (pDxm->s_height / 2) - (GameViewMatrix._12*_Enemy.x + GameViewMatrix._22 * _Enemy.y + GameViewMatrix._32 *(_Enemy.z) + GameViewMatrix._42) *(pDxm->s_height / 2) / ScreenW;
+	//深度坐标
 	_Screen.z = y1 - _Screen.y;
 	return TRUE;
 }
 
 int initia = 0;
-
+//矩阵与对象更新
 DWORD WINAPI ThreadUpdateData(LPVOID p)
 {
 	while (1)
 	{
 		if (initia == 0)
 		{
+			//第一次运行时初始化临界线程锁
 			InitializeCriticalSection(&k);
 			initia++;
 		}
+		//矩阵对象不存在或者矩阵失效时重新获取矩阵
 		if (dwJuzhenAddr == 0 || pMM->RPM<float>(dwJuzhenAddr + 56, 4) != 3)
 		{
 			std::vector<DWORD_PTR> vAddr;
@@ -211,6 +218,7 @@ DWORD WINAPI ThreadUpdateData(LPVOID p)
 			//vAddr = AobScan::FindSigX32(dwGamePid, "ABAAAA3E00000080000000800000803F00000080618B983F", 0x40000000, 0x7fffffff);
 			std::vector<DWORD_PTR>::iterator it;
 
+			//验证结果
 			for (it = vAddr.begin(); it != vAddr.end(); it++)
 			{
 				float dmTmp = pMM->RPM<float>(*it + 0xd0 +0x38, sizeof(float));
@@ -261,14 +269,14 @@ DWORD WINAPI ThreadUpdateData2(LPVOID p)
 		std::vector<DWORD_PTR> vGoods;
 
 	
-		EnterCriticalSection(&k);
+		//EnterCriticalSection(&k);
 		pMM->MemSearch(GameData::bGoodsTag, sizeof(GameData::bGoodsTag), 0x00327000, 0x7fffffff, FALSE, 0, vGoods);
 		//vGoods = AobScan::FindSigX32(dwGamePid, "9CDF????00002000", 0x10000000, 0x7fffffff);
 #ifdef DEBUG
 		printf("更新物品 \n");
 #endif
 		
-		LeaveCriticalSection(&k);//离开临界区
+		//LeaveCriticalSection(&k);//离开临界区
 
 		dwGoodsCount = vGoods.size();
 		for (unsigned int i = 0; i < dwGoodsCount; i++)
@@ -289,13 +297,13 @@ DWORD WINAPI ThreadUpdateData3(LPVOID p)
 		//更新车辆
 		std::vector<DWORD_PTR> vCars;
 
-		EnterCriticalSection(&k);
+		//EnterCriticalSection(&k);
 		pMM->MemSearch(GameData::bCarsTag, sizeof(GameData::bCarsTag), 0x00327000, 0x7fffffff, FALSE, 0, vCars);
 		//vGoods = AobScan::FindSigX32(dwGamePid, "9CDF????00002000", 0x10000000, 0x7fffffff);
 #ifdef DEBUG
 		printf("更新车辆 \n");
 #endif
-		LeaveCriticalSection(&k);//离开临界区
+		//LeaveCriticalSection(&k);//离开临界区
 
 		dwCarsCount = vCars.size();
 		for (unsigned int i = 0; i < dwCarsCount; i++)
@@ -308,7 +316,7 @@ DWORD WINAPI ThreadUpdateData3(LPVOID p)
 		Sleep(1000 * UpdateTime);
 	}
 }
-
+//计算距离
 FLOAT GetDistance(FLOAT X, FLOAT Y, FLOAT X1, FLOAT Y1)
 {
 	FLOAT XX, YY;
@@ -316,6 +324,7 @@ FLOAT GetDistance(FLOAT X, FLOAT Y, FLOAT X1, FLOAT Y1)
 	YY = Y - Y1;
 	return (float)sqrt(XX * XX + YY * YY);
 }
+//锁定
 BOOL bLockAim = FALSE;
 float fMin = 0.0f;
 float g_AimX = 0.0f;

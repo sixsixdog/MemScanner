@@ -43,8 +43,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_PAINT:
 	{
+		//GWL_USERDATA:得到和窗口相关联的32位程序地址值
 		DxManager* dm = (DxManager*)GetWindowLong(hWnd, GWL_USERDATA);
 		if (!dm) return -1;
+		//立即绘制
 		dm->render();
 		ValidateRect(hWnd, NULL);   // 更新客户区的显示
 	}	
@@ -82,6 +84,9 @@ void DxManager::SetupWindow(LPCTSTR szWndName)
 	WNDCLASSEXA wc;
 	ZeroMemory(&wc, sizeof(WNDCLASSEX));
 	wc.cbSize = sizeof(WNDCLASSEX);
+
+	//CS_HREDRAW:一旦调整窗口高度立即重新绘制
+	//CS_HREDRAW:一旦调整窗口宽度立即重新绘制
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 
 	//trunk的方法，或者Get / SetWindowLong，用GWL_USERDATA参数,解决 静态函数中使用this指针的问题
@@ -99,10 +104,15 @@ void DxManager::SetupWindow(LPCTSTR szWndName)
 	nNameLen = rand() % 15 + 1;
 	std::string wndName = wr.Generate(nNameLen, TRUE, TRUE, FALSE);
 
-	//透明窗口 WS_EX_LAYERED | WS_EX_TRANSPARENT
+	//透明窗口参数
+	//WS_EX_TRANSPARENT 属性不是指绘制文字时候透明，而是对鼠标点击时的穿透，也就是说
+	//鼠标点在一个具有透明属性的窗口上，鼠标消息将传递给其下面不具有透明属性的窗口
+	//WS_EX_LAYERED窗口透明化
+	//创建透明覆盖窗口
 	over_hWnd = CreateWindowExA(WS_EX_LAYERED | WS_EX_TRANSPARENT, wc.lpszClassName, wndName.c_str(), WS_POPUP, rc.left, rc.top, s_width, s_height, NULL, NULL, wc.hInstance, NULL);
 
 //	SetWindowLong(over_hWnd, GWL_USERDATA, (LONG)this);
+	//初始化绘制
 	InitD3D();
 
 	SetLayeredWindowAttributes(over_hWnd, RGB(0, 0, 0), 0, ULW_COLORKEY);
@@ -127,6 +137,7 @@ void DxManager::InitD3D()
 	D3DPRESENT_PARAMETERS d3dpp;    // D3D设备信息结构体
 
 	D3DCAPS9 caps; int vp = 0;
+	//尝试获取硬件能力描述
 	if (FAILED(pD3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps)))
 	{
 		MyOutputDebugStringA("GetDeviceCaps failed");
@@ -174,11 +185,11 @@ void DxManager::InitD3D()
 	D3DXCreateFontA(pDevice, 13, 0, FW_SEMIBOLD, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "simsun", &pFont);
 	D3DXCreateFontA(pDevice, 15, 0, FW_NORMAL, 1, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "simsun", &pFontMenu);
 	D3DXCreateLine(pDevice, &pD3DLine);
-
+	//创建使用的字体和线条
 	
 	
 }
-
+//绘制字体
 void DxManager::DrawString(int x, int y, DWORD D3DColor, LPD3DXFONT pUseFont, const char *fmt, ...)
 {
 	//OutputDebugStringA("DrawString\n");
@@ -190,17 +201,18 @@ void DxManager::DrawString(int x, int y, DWORD D3DColor, LPD3DXFONT pUseFont, co
 	va_end(va_alist);
 	pUseFont->DrawTextA(NULL, szText, -1, &rFontPos, DT_NOCLIP, D3DColor);
 }
-
+//绘制线
 void DxManager::FillRGB(int x, int y, int w, int h, D3DCOLOR color)
 {
 	D3DRECT rec = { x, y, x + w, y + h };
 	pDevice->Clear(1, &rec, D3DCLEAR_TARGET, color, 0, 0);
 }
-
+//绘制点
 void DxManager::DrawPoint(int x, int y, int w, int h, DWORD color)
 {
 	FillRGB((int)x, (int)y, (int)w, (int)h, color);
 }
+//绘制方体
 void DxManager::DrawBox(float x, float y, float width, float height, D3DCOLOR color)
 {
 	D3DXVECTOR2 points[5];
@@ -212,7 +224,7 @@ void DxManager::DrawBox(float x, float y, float width, float height, D3DCOLOR co
 	pD3DLine->SetWidth(1);
 	pD3DLine->Draw(points, 5, color);
 }
-
+//绘制准星
 void DxManager::DrawCrosshair()
 {
 	
@@ -222,7 +234,7 @@ void DxManager::DrawCrosshair()
 	FillRGB(s_width / 2, s_height / 2 + 4, 1, 10, TextYellow);//下边线
 
 }
-
+//绘制血条
 void DxManager::DrawBlood(float x, float y, float h, float w, float fBlood)
 {
 	if (fBlood >70.0)
@@ -241,7 +253,7 @@ void DxManager::DrawBlood(float x, float y, float h, float w, float fBlood)
 		FillRGB(x, y, 5, h*fBlood / 100.0, TextRed);
 	}
 }
-
+//绘制园
 void DxManager::DrawCircle(int X, int Y, int radius, int numSides, DWORD Color)
 {
 	D3DXVECTOR2 Line[128];
@@ -263,7 +275,7 @@ void DxManager::DrawCircle(int X, int Y, int radius, int numSides, DWORD Color)
 	pD3DLine->Draw(Line, Count, Color);
 	//pD3DLine->End();
 }
-
+//绘制刷新率
 void DxManager::DrawFPS(int x, int y, DWORD D3DColor, LPD3DXFONT pUseFont)
 {
 	
@@ -287,7 +299,7 @@ void DxManager::DrawFPS(int x, int y, DWORD D3DColor, LPD3DXFONT pUseFont)
 	RECT rFontPos = { x, y, x + 120, y + 16 };
 	pUseFont->DrawTextA(NULL, szFPS, -1, &rFontPos, DT_NOCLIP, D3DColor);
 }
-
+//测试绘制
 void DxManager::TestDD()
 {
 
@@ -297,11 +309,12 @@ void DxManager::TestDD()
 	pDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, 2);
 
 }
-
+//矩阵设置
 void DxManager::Matrix_Set()
 {
 	
 }
+
 void DxManager::TestBH()
 {
 	
